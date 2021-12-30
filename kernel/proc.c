@@ -85,6 +85,20 @@ allocpid() {
   return pid;
 }
 
+static int 
+procnum() {
+  int num = 0;
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state != UNUSED) {
+      num++;
+    }
+    release(&p->lock);
+  }
+  return num;
+}
+
 // Look in the process table for an UNUSED proc.
 // If found, initialize state required to run in the kernel,
 // and return with p->lock held.
@@ -93,7 +107,6 @@ static struct proc*
 allocproc(void)
 {
   struct proc *p;
-
   for(p = proc; p < &proc[NPROC]; p++) {
     acquire(&p->lock);
     if(p->state == UNUSED) {
@@ -127,6 +140,7 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  p->mask = 0;
   return p;
 }
 
@@ -276,6 +290,8 @@ fork(void)
   np->sz = p->sz;
 
   np->parent = p;
+
+  np->mask = p->mask; // added for trace syscall.
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
@@ -692,4 +708,10 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+uint64 trace(int mask) {
+  struct proc *p = myproc();
+  p->mask = mask;
+  return mask;
 }
