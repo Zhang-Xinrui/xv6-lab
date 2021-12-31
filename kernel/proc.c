@@ -85,7 +85,7 @@ allocpid() {
   return pid;
 }
 
-static int 
+int 
 procnum() {
   int num = 0;
   struct proc *p;
@@ -708,10 +708,4 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
-}
-
-uint64 trace(int mask) {
-  struct proc *p = myproc();
-  p->mask = mask;
-  return mask;
 }

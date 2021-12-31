@@ -109,15 +109,18 @@ sys_trace(void)
 
 uint64 
 sys_sysinfo(void) {
-  uint64* p;
-  struct sysinfo* info;
-  if (argaddr(0, p) < 0) {
+  uint64 p;
+  struct sysinfo info;
+  if (argaddr(0, &p) < 0) {
     return -1;
   }
-  info = p;
   int num = procnum();
   uint64 freemem = countfreemem();
-  info->freemem = freemem;
-  info->nproc = num;
+  info.freemem = freemem;
+  info.nproc = num;
+
+  struct proc *process = myproc();
+  if(copyout(process->pagetable, p, (char *)&info, sizeof(info)) < 0)
+      return -1;
   return 0;
 }
